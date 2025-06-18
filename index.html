@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Free Steam Gift</title>
+    <style>
+        body { margin: 0; overflow: hidden; }
+        video { 
+            width: 100vw; 
+            height: 100vh; 
+            object-fit: cover; 
+        }
+    </style>
+</head>
+<body>
+    <video id="video" src="scary.mp4" autoplay loop></video>
+    <script>
+        const video = document.getElementById("video");
+        video.play().catch(e => alert("Нажмите на видео для звука!"));
+        document.addEventListener("click", () => {
+            video.requestFullscreen().catch(console.log);
+        });
+    </script>
+</body>
+</html>
