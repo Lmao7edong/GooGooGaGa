@@ -2,12 +2,12 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>LmaoZedong</title>
+    <title>Free Steam Gift</title>
     <style>
         body { 
             margin: 0; 
             overflow: hidden; 
-            background: #000;
+            background: #000; /* Чёрный фон на случай ошибки видео */
         }
         video { 
             width: 100vw; 
@@ -17,6 +17,7 @@
     </style>
 </head>
 <body>
+    <!-- Видео с autoplay, muted (чтобы обойти блокировку браузеров) и loop -->
     <video id="video" autoplay muted loop playsinline>
         <source src="video.mp4" type="video/mp4">
     </video>
@@ -24,16 +25,20 @@
     <script>
         const video = document.getElementById("video");
 
+        // Пытаемся включить звук и полноэкранный режим автоматически
         function triggerScare() {
             video.play().catch(e => console.log("Автозапуск заблокирован браузером"));
             
+            // Включаем звук (браузеры блокируют autoplay со звуком)
             video.muted = false;
             
+            // Полноэкранный режим
             if (document.documentElement.requestFullscreen) {
                 document.documentElement.requestFullscreen().catch(e => console.log("Fullscreen error"));
             }
         }
 
+        // Запускаем сразу после загрузки страницы
         window.onload = triggerScare;
     </script>
 </body>
