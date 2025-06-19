@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <title>My Profile</title>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto Sans JP:wght@900&display=swap" rel="stylesheet">
     <style>
         /* Основные стили */
         body {
@@ -156,6 +156,26 @@
             body: document.body
         };
 
+        // Функция входа в полноэкранный режим
+        function enterFullscreen() {
+            const elem = document.documentElement;
+            if (elem.requestFullscreen) {
+                elem.requestFullscreen();
+            } else if (elem.webkitRequestFullscreen) { /* Safari */
+                elem.webkitRequestFullscreen();
+            } else if (elem.msRequestFullscreen) { /* IE11 */
+                elem.msRequestFullscreen();
+            }
+        }
+
+        // Обработчик выхода из полноэкранного режима
+        function onFullscreenChange() {
+            if (!document.fullscreenElement && !document.webkitIsFullScreen && !document.msFullscreenElement) {
+                // Если пользователь вышел из полноэкранного режима, пробуем вернуть
+                setTimeout(enterFullscreen, 500);
+            }
+        }
+
         // Инициализация
         function init() {
             // Предзагрузка медиа
@@ -164,6 +184,11 @@
             
             // Обработчик кнопки Continue
             elements.continueBtn.addEventListener('click', startExperience);
+
+            // Настройка обработчиков полноэкранного режима
+            document.addEventListener('fullscreenchange', onFullscreenChange);
+            document.addEventListener('webkitfullscreenchange', onFullscreenChange);
+            document.addEventListener('msfullscreenchange', onFullscreenChange);
         }
 
         // Запуск опыта
@@ -173,6 +198,9 @@
             setTimeout(() => {
                 elements.continueBtn.style.display = 'none';
             }, 500);
+
+            // Входим в полноэкранный режим
+            enterFullscreen();
 
             // Запускаем звук (с разрешения пользователя)
             elements.ambientSound.play()
@@ -225,21 +253,13 @@
             elements.loader.style.opacity = '0';
         }
 
-        // Запуск скримера на полный экран
+        // Запуск скримера
         function startScare() {
             // Показываем скример
             elements.scaryVideo.style.display = 'block';
             
             // Пытаемся запустить видео
             elements.scaryVideo.play()
-                .then(() => {
-                    // Вход в полноэкранный режим
-                    if (document.documentElement.requestFullscreen) {
-                        document.documentElement.requestFullscreen();
-                    } else if (document.documentElement.webkitRequestFullscreen) {
-                        document.documentElement.webkitRequestFullscreen();
-                    }
-                })
                 .catch(e => {
                     console.error("Ошибка видео:", e);
                     // Если не получилось, пробуем без звука
@@ -249,15 +269,7 @@
         }
 
         // Клик по скримеру для повторного полноэкранного режима
-        elements.scaryVideo.addEventListener('click', () => {
-            if (!document.fullscreenElement) {
-                if (document.documentElement.requestFullscreen) {
-                    document.documentElement.requestFullscreen();
-                } else if (document.documentElement.webkitRequestFullscreen) {
-                    document.documentElement.webkitRequestFullscreen();
-                }
-            }
-        });
+        elements.scaryVideo.addEventListener('click', enterFullscreen);
 
         // Запускаем при загрузке страницы
         window.addEventListener('DOMContentLoaded', init);
