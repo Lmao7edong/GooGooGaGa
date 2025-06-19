@@ -27,7 +27,7 @@
         
         #loader {
             position: fixed;
-            bottom: 15%; /* Позиция от нижнего края */
+            bottom: 15%;
             left: 0;
             width: 100%;
             display: flex;
@@ -114,7 +114,7 @@
     <div id="mouse-trigger"></div>
     
     <!-- Основное видео (скример) -->
-    <video id="scary-video" playsinline webkit-playsinline></video>
+    <video id="scary-video" muted playsinline webkit-playsinline></video>
 
     <script>
         // Конфигурация
@@ -167,8 +167,10 @@
         // 3. Триггер при движении мыши
         function setupMouseTrigger() {
             const handleInteraction = () => {
-                mouseMoved = true;
-                checkScareConditions();
+                if (!mouseMoved) {
+                    mouseMoved = true;
+                    checkScareConditions();
+                }
             };
             
             mouseTrigger.addEventListener('mousemove', handleInteraction);
@@ -208,11 +210,6 @@
                     .then(() => {
                         // Включаем полноэкранный режим
                         enterFullscreen();
-                        
-                        // Пытаемся включить звук
-                        setTimeout(() => {
-                            scaryVideo.muted = false;
-                        }, 200);
                     })
                     .catch(e => {
                         console.error("Playback failed:", e);
