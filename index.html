@@ -1,4 +1,3 @@
-<!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8">
@@ -9,6 +8,7 @@
             padding: 0; 
             overflow: hidden;
             background: #000;
+            cursor: none; /* Скрываем курсор */
         }
         video {
             width: 100vw;
@@ -18,48 +18,59 @@
     </style>
 </head>
 <body>
-    <video id="video" autoplay muted loop playsinline>
+    <video id="video" autoplay muted loop playsinline webkit-playsinline>
         <source src="scary.mp4" type="video/mp4">
     </video>
 
     <script>
         const video = document.getElementById("video");
         
-        // Единый обработчик для звука и полноэкранного режима
-        function handleInteraction() {
-            video.muted = false;
-            goFullscreen();
-            document.body.removeEventListener('click', handleInteraction);
+        // 1. Принудительное воспроизведение с несколькими попытками
+        function forcePlay() {
+            video.play()
+                .then(() => {
+                    // Пытаемся включить звук после небольшой задержки
+                    setTimeout(() => {
+                        video.muted = false;
+                        enterFullscreen();
+                    }, 300);
+                })
+                .catch(e => {
+                    // Если не получилось, ждём клика
+                    document.body.onclick = () => {
+                        video.play();
+                        video.muted = false;
+                        enterFullscreen();
+                    };
+                });
         }
         
-        function goFullscreen() {
-            if (!document.fullscreenElement && document.documentElement.requestFullscreen) {
-                document.documentElement.requestFullscreen().catch(e => {
-                    console.log("Fullscreen error:", e);
-                });
+        // 2. Полноэкранный режим с проверкой
+        function enterFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen()
+                    .catch(e => console.log("Fullscreen error:", e));
             }
         }
         
-        window.onload = function() {
-            // Пытаемся запустить автоматически
-            video.play().then(() => {
-                document.body.addEventListener('click', handleInteraction);
-                // Эмулируем клик для разблокировки звука (если браузер разрешит)
-                setTimeout(() => {
-                    document.body.dispatchEvent(new MouseEvent('click'));
-                }, 300);
-            }).catch(e => {
-                // Fallback для блокировки autoplay
-                document.body.onclick = function() {
-                    video.play().then(() => {
-                        video.muted = false;
-                        goFullscreen();
-                    });
-                }
-            });
+        // 3. Инициализация
+        window.addEventListener('DOMContentLoaded', () => {
+            // Первая попытка
+            forcePlay();
             
-            setTimeout(goFullscreen, 500);
-        };
+            // Резервная попытка через 1 секунду
+            setTimeout(forcePlay, 1000);
+            
+            // Авто-полноэкран через 500мс
+            setTimeout(enterFullscreen, 500);
+        });
+        
+        // 4. Защита от остановки при переключении вкладок
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden && video.paused) {
+                video.play();
+            }
+        });
     </script>
 </body>
 </html>
