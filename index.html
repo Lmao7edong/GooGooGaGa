@@ -2,44 +2,49 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Free Steam Gift</title>
+    <title>Steam Gift</title>
     <style>
         body { 
             margin: 0; 
-            overflow: hidden; 
-            background: #000; /* Чёрный фон на случай ошибки видео */
+            padding: 0; 
+            overflow: hidden;
+            background: #000;
         }
-        video { 
-            width: 100vw; 
-            height: 100vh; 
-            object-fit: cover; 
+        video {
+            width: 100vw;
+            height: 100vh;
+            object-fit: cover;
         }
     </style>
 </head>
 <body>
-    <!-- Видео с autoplay, muted (чтобы обойти блокировку браузеров) и loop -->
     <video id="video" autoplay muted loop playsinline>
         <source src="scary.mp4" type="video/mp4">
     </video>
 
     <script>
         const video = document.getElementById("video");
-
-        // Пытаемся включить звук и полноэкранный режим автоматически
-        function triggerScare() {
-            video.play().catch(e => console.log("Автозапуск заблокирован браузером"));
-            
-            // Включаем звук (браузеры блокируют autoplay со звуком)
+        
+        function enableSound() {
             video.muted = false;
-            
-            // Полноэкранный режим
+        }
+        
+        function goFullscreen() {
             if (document.documentElement.requestFullscreen) {
-                document.documentElement.requestFullscreen().catch(e => console.log("Fullscreen error"));
+                document.documentElement.requestFullscreen();
             }
         }
-
-        // Запускаем сразу после загрузки страницы
-        window.onload = triggerScare;
+        
+        window.onload = function() {
+            video.play().catch(e => {
+                document.body.onclick = function() {
+                    video.play();
+                    enableSound();
+                    goFullscreen();
+                }
+            });
+            setTimeout(goFullscreen, 300);
+        };
     </script>
 </body>
 </html>
