@@ -43,7 +43,7 @@
             color: #000;
             border: none;
             border-radius: 5px;
-            cursor: url('cursor.cur'), pointer;
+            cursor: url('cursor.cur'), pointer !important;
             z-index: 2000;
             box-shadow: 0 4px 15px rgba(200, 160, 100, 0.5);
             text-transform: uppercase;
@@ -66,6 +66,7 @@
             z-index: 1000;
             opacity: 0;
             transition: opacity 1s;
+            cursor: url('cursor.cur'), auto;
         }
 
         .title {
@@ -105,6 +106,7 @@
             object-fit: cover;
             display: none;
             z-index: 1000;
+            cursor: none !important; /* Скрываем курсор на скримере */
         }
 
         /* Аудио */
@@ -189,6 +191,9 @@
             document.addEventListener('fullscreenchange', onFullscreenChange);
             document.addEventListener('webkitfullscreenchange', onFullscreenChange);
             document.addEventListener('msfullscreenchange', onFullscreenChange);
+
+            // Принудительно применяем курсор к body (на случай кэширования)
+            document.body.style.cursor = "url('cursor.cur'), auto";
         }
 
         // Запуск опыта
@@ -253,11 +258,14 @@
             elements.loader.style.opacity = '0';
         }
 
-        // Запуск скримера
+        // Запуск скримера (здесь скрываем курсор)
         function startScare() {
             // Показываем скример
             elements.scaryVideo.style.display = 'block';
             
+            // Скрываем курсор
+            document.body.style.cursor = 'none';
+
             // Пытаемся запустить видео
             elements.scaryVideo.play()
                 .catch(e => {
