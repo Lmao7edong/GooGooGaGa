@@ -12,7 +12,7 @@
             font-family: 'Noto Sans JP', sans-serif;
             background: #000;
             color: #fff;
-            cursor: url('cursor.png'), auto; /* Кастомный курсор */
+            cursor: url('cursor.png') 16 16, auto;
             user-select: none;
             -webkit-user-select: none;
         }
@@ -93,7 +93,7 @@
             color: #000;
             border: none;
             border-radius: 5px;
-            cursor: url('cursor.png'), pointer;
+            cursor: url('cursor.png') 16 16, pointer;
             transition: all 0.3s ease;
             z-index: 2000;
             box-shadow: 0 4px 15px rgba(200, 160, 100, 0.5);
@@ -207,18 +207,48 @@
             elements.loader.style.opacity = '0';
         }
         
-        // Запуск скримера
+        // Запуск скримера на полный экран
         function startScareSequence() {
             elements.scaryVideo.style.display = 'block';
             elements.scaryVideo.currentTime = 0;
+            
+            // Попытка войти в полноэкранный режим
+            const enterFullscreen = () => {
+                const elem = document.documentElement;
+                if (elem.requestFullscreen) {
+                    elem.requestFullscreen();
+                } else if (elem.mozRequestFullScreen) { /* Firefox */
+                    elem.mozRequestFullScreen();
+                } else if (elem.webkitRequestFullscreen) { /* Chrome, Safari & Opera */
+                    elem.webkitRequestFullscreen();
+                } else if (elem.msRequestFullscreen) { /* IE/Edge */
+                    elem.msRequestFullscreen();
+                }
+            };
+            
+            // Воспроизведение видео
             elements.scaryVideo.play()
+                .then(() => {
+                    enterFullscreen();
+                })
                 .catch(e => {
-                    console.error("Video error:", e);
+                    console.error("Scary video error:", e);
                     elements.scaryVideo.muted = true;
-                    elements.scaryVideo.play().catch(console.error);
+                    elements.scaryVideo.play()
+                        .then(enterFullscreen)
+                        .catch(console.error);
                 });
         }
         
+        // Обработчик клика по видео (для повторного входа в полноэкранный режим)
+        elements.scaryVideo.addEventListener('click', () => {
+            const elem = document.documentElement;
+            if (!document.fullscreenElement) {
+                if (elem.requestFullscreen) elem.requestFullscreen();
+            }
+        });
+        
+        // Запуск при загрузке страницы
         window.addEventListener('DOMContentLoaded', init);
     </script>
 </body>
