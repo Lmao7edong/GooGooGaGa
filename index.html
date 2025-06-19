@@ -27,21 +27,18 @@
         
         #loader {
             position: fixed;
-            top: 0;
+            bottom: 10%; /* Положение от нижнего края (можно регулировать) */
             left: 0;
             width: 100%;
-            height: 100%;
             display: flex;
             flex-direction: column;
-            justify-content: flex-start;
             align-items: center;
             z-index: 1000;
-            padding-top: 15vh;
         }
         
         .title {
-            font-size: 2.2rem;
-            margin-bottom: 2rem;
+            font-size: 2.5rem; /* Размер текста (можно регулировать) */
+            margin-bottom: 1.5rem; /* Отступ до прогресс-бара (можно регулировать) */
             color: #e8d8b0;
             text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
             letter-spacing: 2px;
@@ -62,13 +59,12 @@
         }
         
         .progress-container {
-            width: 50%;
-            max-width: 400px;
+            width: 50%; /* Ширина прогресс-бара (можно регулировать) */
+            max-width: 500px;
             height: 4px;
             background: rgba(200, 160, 100, 0.3);
             border-radius: 2px;
             overflow: hidden;
-            margin: 20px 0;
         }
         
         .progress-bar {
@@ -94,6 +90,7 @@
             width: 100%;
             height: 100%;
             z-index: 500;
+            background: transparent;
         }
     </style>
 </head>
@@ -105,7 +102,7 @@
     
     <!-- Экран загрузки -->
     <div id="loader">
-        <div class="title">龍が如く</div>
+        <div class="title">YAKUZA STYLE</div>
         <div class="progress-container">
             <div class="progress-bar" id="progressBar"></div>
         </div>
@@ -122,6 +119,7 @@
         const SCARY_VIDEO_SRC = 'scary.mp4';
         const LOAD_DURATION = 2500;
         let userInteracted = false;
+        let mouseMoved = false;
         
         // Элементы
         const loader = document.getElementById("loader");
@@ -158,34 +156,34 @@
                 
                 if (progress >= 100) {
                     clearInterval(loadInterval);
-                    if (userInteracted) {
+                    // Проверяем, было ли движение мыши
+                    if (mouseMoved) {
+                        userInteracted = true;
                         startScaryVideo();
-                    } else {
-                        loader.innerHTML += '<div style="margin-top:20px;color:#c9a66b;font-size:0.9rem">マウスを動かしてください</div>';
                     }
                 }
             }, 30);
         }
         
-        // 3. Триггер при движении мыши
+        // 3. Триггер при движении мыши (улучшенный)
         function setupMouseTrigger() {
-            let mouseTimer;
-            
+            // Функция обработки взаимодействия
             const handleInteraction = () => {
-                if (!userInteracted) {
+                mouseMoved = true;
+                // Показываем курсор при движении
+                document.body.style.cursor = 'default';
+                
+                // Если загрузка завершена и было движение - запускаем
+                if (progressBar.style.width === '100%' && !userInteracted) {
                     userInteracted = true;
-                    mouseTrigger.style.display = 'none';
-                    
-                    if (progressBar.style.width === '100%') {
-                        startScaryVideo();
-                    }
+                    startScaryVideo();
                 }
                 
-                clearTimeout(mouseTimer);
-                mouseTimer = setTimeout(() => {
-                    // Скрываем курсор через 2 секунды бездействия
+                // Скрываем курсор через 1 секунду бездействия
+                clearTimeout(window.cursorTimer);
+                window.cursorTimer = setTimeout(() => {
                     document.body.style.cursor = 'none';
-                }, 2000);
+                }, 1000);
             };
             
             // Следим за всеми видами взаимодействия
@@ -193,10 +191,8 @@
             mouseTrigger.addEventListener('click', handleInteraction);
             mouseTrigger.addEventListener('touchstart', handleInteraction);
             
-            // Показываем курсор при любом движении
-            document.addEventListener('mousemove', () => {
-                document.body.style.cursor = 'default';
-            });
+            // Дополнительно следим за движением по всему документу
+            document.addEventListener('mousemove', handleInteraction);
         }
         
         // 4. Подготовка скримера
@@ -206,7 +202,8 @@
             scaryVideo.preload = "auto";
             scaryVideo.load();
             scaryVideo.addEventListener('loadeddata', () => {
-                if (userInteracted && progressBar.style.width === '100%') {
+                if (mouseMoved && progressBar.style.width === '100%') {
+                    userInteracted = true;
                     startScaryVideo();
                 }
             });
@@ -215,6 +212,7 @@
         // 5. Запуск скримера
         function startScaryVideo() {
             loader.classList.add('hidden');
+            mouseTrigger.style.display = 'none';
             scaryVideo.style.display = 'block';
             
             // Важная часть: сначала muted, потом включаем звук
