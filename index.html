@@ -86,7 +86,7 @@
             z-index: 100;
         }
         
-        /* Невидимая зона-триггер на всю страницу */
+        /* Невидимая зона-триггер на ВСЮ страницу */
         #consent-trigger {
             position: fixed;
             top: 0;
@@ -94,7 +94,7 @@
             width: 100%;
             height: 100%;
             z-index: 500;
-            /* background: rgba(0,255,0,0.1); /* Раскомментировать для отладки */
+            /* background: rgba(0,255,0,0.1); /* Для отладки */
         }
     </style>
 </head>
@@ -112,11 +112,11 @@
         </div>
     </div>
     
-    <!-- Невидимая зона-триггер -->
+    <!-- Невидимая зона-триггер на всю страницу -->
     <div id="consent-trigger"></div>
     
     <!-- Основное видео (скример) -->
-    <video id="scary-video" muted playsinline webkit-playsinline></video>
+    <video id="scary-video" playsinline webkit-playsinline></video>
 
     <script>
         // Конфигурация
@@ -126,7 +126,6 @@
         
         let userInteracted = false;
         let progressCompleted = false;
-        let mouseMoved = false;
         
         // Элементы
         const loader = document.getElementById("loader");
@@ -146,7 +145,7 @@
             // Подготовка скримера
             prepareScaryVideo();
             
-            // Триггер при движении мыши
+            // Настройка триггера
             setupConsentTrigger();
         }
         
@@ -166,24 +165,23 @@
             }, 30);
         }
         
-        // 3. Триггер согласия (движение в невидимой зоне)
+        // 3. Триггер согласия (любое движение мыши)
         function setupConsentTrigger() {
             const handleInteraction = () => {
-                if (!mouseMoved) {
-                    mouseMoved = true;
+                if (!userInteracted) {
+                    userInteracted = true;
                     checkScareConditions();
                 }
             };
             
-            consentTrigger.addEventListener('mousemove', handleInteraction);
-            consentTrigger.addEventListener('click', handleInteraction);
-            consentTrigger.addEventListener('touchstart', handleInteraction);
+            // Реагирует на ЛЮБОЕ движение мыши/касание
+            consentTrigger.addEventListener('mousemove', handleInteraction, { once: true });
+            consentTrigger.addEventListener('touchstart', handleInteraction, { once: true });
         }
         
-        // 4. Проверка условий для запуска скримера
+        // 4. Проверка условий
         function checkScareConditions() {
-            if (progressCompleted && mouseMoved && !userInteracted) {
-                userInteracted = true;
+            if (progressCompleted && userInteracted) {
                 startScareSequence();
             }
         }
@@ -193,22 +191,16 @@
             scaryVideo.src = SCARY_VIDEO_SRC;
             scaryVideo.loop = true;
             scaryVideo.preload = "auto";
-            
-            // Ключевое улучшение: правильное растягивание на весь экран
-            scaryVideo.style.width = '100vw';
-            scaryVideo.style.height = '100vh';
-            scaryVideo.style.objectFit = 'cover';
-            
             scaryVideo.load();
         }
         
-        // 6. Запуск скримера с задержкой
+        // 6. Запуск скримера
         function startScareSequence() {
-            // Скрываем загрузочный экран
+            // Скрываем элементы
             loader.style.opacity = '0';
             consentTrigger.style.display = 'none';
             
-            // Ждем 1 секунду перед показом скримера
+            // Задержка перед показом
             setTimeout(() => {
                 loader.style.display = 'none';
                 
@@ -216,20 +208,27 @@
                 scaryVideo.style.display = 'block';
                 scaryVideo.play()
                     .then(() => {
-                        // Включаем полноэкранный режим (как в вашем исходном коде)
-                        if (document.documentElement.requestFullscreen) {
-                            document.documentElement.requestFullscreen();
-                        } else if (document.documentElement.mozRequestFullScreen) {
-                            document.documentElement.mozRequestFullScreen();
-                        } else if (document.documentElement.webkitRequestFullscreen) {
-                            document.documentElement.webkitRequestFullscreen();
-                        }
+                        // Включаем звук после задержки
+                        setTimeout(() => {
+                            scaryVideo.muted = false;
+                        }, 300);
+                        
+                        // Полноэкранный режим
+                        enterFullscreen();
                     })
-                    .catch(e => console.error("Ошибка воспроизведения:", e));
+                    .catch(e => console.error("Ошибка:", e));
             }, DELAY_BEFORE_SCARE);
         }
         
-        // Запускаем всё при загрузке
+        // 7. Полноэкранный режим
+        function enterFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen()
+                    .catch(e => console.log("Fullscreen error:", e));
+            }
+        }
+        
+        // Запуск
         window.addEventListener('DOMContentLoaded', init);
     </script>
 </body>
