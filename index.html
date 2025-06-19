@@ -3,15 +3,16 @@
 <head>
     <meta charset="utf-8">
     <title>My Profile</title>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@900&display=swap" rel="stylesheet">
     <style>
         body {
             margin: 0;
             padding: 0;
             overflow: hidden;
-            font-family: 'Orbitron', sans-serif;
+            font-family: 'Noto Sans JP', sans-serif;
             background: #000;
             color: #fff;
+            cursor: none;
         }
         
         #background-video {
@@ -21,7 +22,7 @@
             min-width: 100%;
             min-height: 100%;
             z-index: -1;
-            filter: brightness(0.4);
+            filter: brightness(0.6);
         }
         
         #loader {
@@ -32,32 +33,40 @@
             height: 100%;
             display: flex;
             flex-direction: column;
-            justify-content: center;
+            justify-content: flex-start;
             align-items: center;
             z-index: 1000;
-            background: rgba(0, 0, 0, 0.5);
-            transition: opacity 0.5s;
-        }
-        
-        #loader.hidden {
-            opacity: 0;
-            pointer-events: none;
+            padding-top: 15vh;
         }
         
         .title {
-            font-size: 3rem;
+            font-size: 2.2rem;
             margin-bottom: 2rem;
-            text-shadow: 0 0 10px #00ffff;
-            letter-spacing: 3px;
-            animation: pulse 2s infinite;
+            color: #e8d8b0;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+            letter-spacing: 2px;
+            background: linear-gradient(to right, #e8d8b0, #c9a66b);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            position: relative;
+        }
+        
+        .title::after {
+            content: "";
+            position: absolute;
+            bottom: -10px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(to right, transparent, #c9a66b, transparent);
         }
         
         .progress-container {
             width: 50%;
             max-width: 400px;
-            height: 10px;
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 5px;
+            height: 4px;
+            background: rgba(200, 160, 100, 0.3);
+            border-radius: 2px;
             overflow: hidden;
             margin: 20px 0;
         }
@@ -65,7 +74,7 @@
         .progress-bar {
             height: 100%;
             width: 0%;
-            background: linear-gradient(to right, #00b4ff, #00ffff);
+            background: linear-gradient(to right, #e8d8b0, #c9a66b);
             transition: width 0.1s linear;
         }
         
@@ -78,113 +87,161 @@
             z-index: 100;
         }
         
-        @keyframes pulse {
-            0% { text-shadow: 0 0 10px #00ffff; }
-            50% { text-shadow: 0 0 20px #00ffff, 0 0 30px #0084ff; }
-            100% { text-shadow: 0 0 10px #00ffff; }
+        #mouse-trigger {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 500;
         }
     </style>
 </head>
 <body>
-    <!-- Фоновое видео геймплея -->
+    <!-- Фоновое видео -->
     <video id="background-video" autoplay muted loop playsinline>
-        <source src="https://assets.mixkit.co/videos/preview/mixkit-game-show-suspense-waiting-123-large.mp4" type="video/mp4">
+        <source src="gameplay.mp4" type="video/mp4">
     </video>
     
     <!-- Экран загрузки -->
     <div id="loader">
-        <div class="title">WELCOME TO MY PROFILE</div>
+        <div class="title">龍が如く</div>
         <div class="progress-container">
             <div class="progress-bar" id="progressBar"></div>
         </div>
     </div>
     
+    <!-- Триггер при движении мыши -->
+    <div id="mouse-trigger"></div>
+    
     <!-- Основное видео (скример) -->
     <video id="scary-video" playsinline webkit-playsinline></video>
-    
-    <!-- Фоновый звук -->
-    <audio id="ambient-sound" loop>
-        <source src="https://assets.mixkit.co/sfx/preview/mixkit-ambient-relaxing-guitar-2434.mp3" type="audio/mpeg">
-    </audio>
 
     <script>
         // Конфигурация
         const SCARY_VIDEO_SRC = 'scary.mp4';
-        const LOAD_DURATION = 2500; // 2.5 секунды загрузки
+        const LOAD_DURATION = 2500;
+        let userInteracted = false;
         
         // Элементы
         const loader = document.getElementById("loader");
         const progressBar = document.getElementById("progressBar");
         const bgVideo = document.getElementById("background-video");
         const scaryVideo = document.getElementById("scary-video");
-        const ambientSound = document.getElementById("ambient-sound");
+        const mouseTrigger = document.getElementById("mouse-trigger");
         
-        // 1. Запуск фонового геймплея и звука
-        bgVideo.play().catch(e => console.log("Background video autoplay blocked"));
-        ambientSound.volume = 0.3;
-        ambientSound.play().catch(e => console.log("Audio autoplay blocked"));
-        
-        // 2. Анимация загрузки
-        let startTime = Date.now();
-        let loadInterval = setInterval(() => {
-            const elapsed = Date.now() - startTime;
-            const progress = Math.min(elapsed / LOAD_DURATION * 100, 100);
-            progressBar.style.width = progress + '%';
+        // 1. Инициализация
+        function init() {
+            // Запуск фонового видео
+            bgVideo.play().catch(console.log);
             
-            if (progress >= 100) {
-                clearInterval(loadInterval);
-                prepareScaryVideo();
-            }
-        }, 30);
+            // Анимация загрузки
+            animateProgressBar();
+            
+            // Подготовка скримера
+            prepareScaryVideo();
+            
+            // Триггер при движении мыши
+            setupMouseTrigger();
+            
+            // Авто-полноэкран через 3 секунды
+            setTimeout(enterFullscreen, 3000);
+        }
         
-        // 3. Подготовка скримера
+        // 2. Анимация прогресс-бара
+        function animateProgressBar() {
+            let startTime = Date.now();
+            let loadInterval = setInterval(() => {
+                const elapsed = Date.now() - startTime;
+                const progress = Math.min(elapsed / LOAD_DURATION * 100, 100);
+                progressBar.style.width = progress + '%';
+                
+                if (progress >= 100) {
+                    clearInterval(loadInterval);
+                    if (userInteracted) {
+                        startScaryVideo();
+                    } else {
+                        loader.innerHTML += '<div style="margin-top:20px;color:#c9a66b;font-size:0.9rem">マウスを動かしてください</div>';
+                    }
+                }
+            }, 30);
+        }
+        
+        // 3. Триггер при движении мыши
+        function setupMouseTrigger() {
+            let mouseTimer;
+            
+            const handleInteraction = () => {
+                if (!userInteracted) {
+                    userInteracted = true;
+                    mouseTrigger.style.display = 'none';
+                    
+                    if (progressBar.style.width === '100%') {
+                        startScaryVideo();
+                    }
+                }
+                
+                clearTimeout(mouseTimer);
+                mouseTimer = setTimeout(() => {
+                    // Скрываем курсор через 2 секунды бездействия
+                    document.body.style.cursor = 'none';
+                }, 2000);
+            };
+            
+            // Следим за всеми видами взаимодействия
+            mouseTrigger.addEventListener('mousemove', handleInteraction);
+            mouseTrigger.addEventListener('click', handleInteraction);
+            mouseTrigger.addEventListener('touchstart', handleInteraction);
+            
+            // Показываем курсор при любом движении
+            document.addEventListener('mousemove', () => {
+                document.body.style.cursor = 'default';
+            });
+        }
+        
+        // 4. Подготовка скримера
         function prepareScaryVideo() {
             scaryVideo.src = SCARY_VIDEO_SRC;
             scaryVideo.loop = true;
             scaryVideo.preload = "auto";
             scaryVideo.load();
-            
-            scaryVideo.addEventListener('loadeddata', startScaryVideo);
-            scaryVideo.addEventListener('error', handleError);
+            scaryVideo.addEventListener('loadeddata', () => {
+                if (userInteracted && progressBar.style.width === '100%') {
+                    startScaryVideo();
+                }
+            });
         }
         
-        // 4. Запуск скримера
+        // 5. Запуск скримера
         function startScaryVideo() {
-            // Плавное скрытие загрузочного экрана
             loader.classList.add('hidden');
-            
-            // Показываем и запускаем скример
             scaryVideo.style.display = 'block';
+            
+            // Важная часть: сначала muted, потом включаем звук
+            scaryVideo.muted = true;
             scaryVideo.play()
                 .then(() => {
-                    // Включаем полноэкранный режим и звук
                     enterFullscreen();
+                    // Включаем звук после небольшой задержки
                     setTimeout(() => {
                         scaryVideo.muted = false;
-                        ambientSound.pause();
-                    }, 100);
+                    }, 200);
                 })
                 .catch(e => {
-                    console.error("Scary video play failed:", e);
+                    console.error("Playback failed:", e);
                 });
         }
         
-        // 5. Полноэкранный режим
+        // 6. Полноэкранный режим
         function enterFullscreen() {
             if (!document.fullscreenElement) {
                 document.documentElement.requestFullscreen()
-                    .catch(e => console.log("Fullscreen error:", e));
+                    .catch(console.log);
             }
         }
         
-        // 6. Обработка ошибок
-        function handleError() {
-            console.error("Video loading error");
-            loader.innerHTML = '<div style="color:red">Content loading error</div>';
-        }
-        
-        // 7. Авто-полноэкран через 3 секунды
-        setTimeout(enterFullscreen, 3000);
+        // Запускаем всё при загрузке
+        window.addEventListener('DOMContentLoaded', init);
     </script>
 </body>
 </html>
