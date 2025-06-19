@@ -5,6 +5,7 @@
     <title>My Profile</title>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@900&display=swap" rel="stylesheet">
     <style>
+        /* Основные стили */
         body {
             margin: 0;
             padding: 0;
@@ -12,11 +13,17 @@
             font-family: 'Noto Sans JP', sans-serif;
             background: #000;
             color: #fff;
-            cursor: url('cursor.png') 16 16, auto;
+            cursor: url('cursor.png') 16 16, auto; /* Курсор 32x32 с центром в 16x16 */
             user-select: none;
             -webkit-user-select: none;
         }
-        
+
+        /* Скрытие курсора на скримере */
+        .scare-mode {
+            cursor: none !important;
+        }
+
+        /* Стили для видео и кнопки */
         #background-video {
             position: fixed;
             right: 0;
@@ -28,59 +35,7 @@
             opacity: 0;
             transition: opacity 1s ease-in;
         }
-        
-        #loader {
-            position: fixed;
-            bottom: 15%;
-            left: 0;
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            z-index: 1000;
-            opacity: 0;
-            transition: opacity 1s ease-in;
-        }
-        
-        .title {
-            font-size: 2rem;
-            margin-bottom: 1.2rem;
-            color: #e8d8b0;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
-            letter-spacing: 3px;
-            background: linear-gradient(to right, #e8d8b0, #c9a66b);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            position: relative;
-            font-weight: 900;
-            text-transform: uppercase;
-        }
-        
-        .progress-container {
-            width: 50%;
-            max-width: 400px;
-            height: 4px;
-            background: rgba(200, 160, 100, 0.3);
-            border-radius: 2px;
-            overflow: hidden;
-        }
-        
-        .progress-bar {
-            height: 100%;
-            width: 0%;
-            background: linear-gradient(to right, #e8d8b0, #c9a66b);
-            transition: width 0.1s linear;
-        }
-        
-        #scary-video {
-            position: fixed;
-            width: 100vw;
-            height: 100vh;
-            object-fit: cover;
-            display: none;
-            z-index: 100;
-        }
-        
+
         #continue-btn {
             position: fixed;
             top: 50%;
@@ -93,21 +48,17 @@
             color: #000;
             border: none;
             border-radius: 5px;
-            cursor: url('cursor.png') 16 16, pointer;
+            cursor: url('cursor.png') 16 16, pointer; /* Курсор для кнопки */
             transition: all 0.3s ease;
             z-index: 2000;
             box-shadow: 0 4px 15px rgba(200, 160, 100, 0.5);
             text-transform: uppercase;
             letter-spacing: 2px;
         }
-        
+
         #continue-btn:hover {
             transform: translate(-50%, -50%) scale(1.05);
             box-shadow: 0 6px 20px rgba(200, 160, 100, 0.7);
-        }
-        
-        #continue-btn:active {
-            transform: translate(-50%, -50%) scale(0.98);
         }
     </style>
 </head>
@@ -116,139 +67,49 @@
         <source src="gameplay.mp4" type="video/mp4">
     </video>
     
-    <div id="loader">
-        <div class="title">Welcome to My Account</div>
-        <div class="progress-container">
-            <div class="progress-bar" id="progressBar"></div>
-        </div>
-    </div>
-    
     <video id="scary-video" preload="auto">
         <source src="scary.mp4" type="video/mp4">
     </video>
     
-    <audio id="ambient-sound" preload="auto" loop>
-        <source src="ambient.mp3" type="audio/mpeg">
-    </audio>
-    
     <button id="continue-btn">Continue</button>
 
     <script>
-        // Константы
-        const LOAD_DURATION = 4500;
-        const DELAY_BEFORE_SCARE = 1000;
-        const FADE_OUT_DURATION = 1000;
-        
         // Элементы
         const elements = {
-            loader: document.getElementById("loader"),
-            progressBar: document.getElementById("progressBar"),
             bgVideo: document.getElementById("background-video"),
             scaryVideo: document.getElementById("scary-video"),
-            ambientSound: document.getElementById("ambient-sound"),
-            continueBtn: document.getElementById("continue-btn")
+            continueBtn: document.getElementById("continue-btn"),
+            body: document.body
         };
-        
+
         // Инициализация
         function init() {
-            elements.loader.style.opacity = '0';
-            elements.bgVideo.style.opacity = '0';
             elements.continueBtn.addEventListener('click', startExperience);
         }
-        
-        // Запуск после нажатия кнопки
+
+        // Запуск опыта
         function startExperience() {
             elements.continueBtn.style.opacity = '0';
             setTimeout(() => {
                 elements.continueBtn.style.display = 'none';
+                elements.bgVideo.style.opacity = '1';
             }, 500);
-            
-            elements.ambientSound.play()
-                .then(() => {
-                    elements.bgVideo.style.opacity = '1';
-                    elements.loader.style.opacity = '1';
-                    animateProgressBar();
-                })
-                .catch(e => {
-                    console.error("Audio error:", e);
-                    elements.bgVideo.style.opacity = '1';
-                    elements.loader.style.opacity = '1';
-                    animateProgressBar();
-                });
         }
-        
-        // Анимация прогресс-бара
-        function animateProgressBar() {
-            let startTime = Date.now();
-            let loadInterval = setInterval(() => {
-                const elapsed = Date.now() - startTime;
-                const progress = Math.min(elapsed / LOAD_DURATION * 100, 100);
-                elements.progressBar.style.width = progress + '%';
-                
-                if (progress >= 100) {
-                    clearInterval(loadInterval);
-                    fadeOutElements();
-                    setTimeout(startScareSequence, DELAY_BEFORE_SCARE);
-                }
-            }, 30);
-        }
-        
-        // Плавное исчезновение элементов
-        function fadeOutElements() {
-            const fadeInterval = setInterval(() => {
-                if (elements.ambientSound.volume > 0.05) {
-                    elements.ambientSound.volume -= 0.05;
-                } else {
-                    elements.ambientSound.pause();
-                    clearInterval(fadeInterval);
-                }
-            }, FADE_OUT_DURATION / 20);
-            
-            elements.loader.style.opacity = '0';
-        }
-        
-        // Запуск скримера на полный экран
-        function startScareSequence() {
+
+        // Включение скримера (курсор скрывается)
+        function startScare() {
+            elements.body.classList.add('scare-mode');
             elements.scaryVideo.style.display = 'block';
-            elements.scaryVideo.currentTime = 0;
-            
-            // Попытка войти в полноэкранный режим
-            const enterFullscreen = () => {
-                const elem = document.documentElement;
-                if (elem.requestFullscreen) {
-                    elem.requestFullscreen();
-                } else if (elem.mozRequestFullScreen) { /* Firefox */
-                    elem.mozRequestFullScreen();
-                } else if (elem.webkitRequestFullscreen) { /* Chrome, Safari & Opera */
-                    elem.webkitRequestFullscreen();
-                } else if (elem.msRequestFullscreen) { /* IE/Edge */
-                    elem.msRequestFullscreen();
-                }
-            };
-            
-            // Воспроизведение видео
             elements.scaryVideo.play()
-                .then(() => {
-                    enterFullscreen();
-                })
-                .catch(e => {
-                    console.error("Scary video error:", e);
-                    elements.scaryVideo.muted = true;
-                    elements.scaryVideo.play()
-                        .then(enterFullscreen)
-                        .catch(console.error);
-                });
+                .then(() => document.documentElement.requestFullscreen())
+                .catch(e => console.error("Ошибка видео:", e));
         }
-        
-        // Обработчик клика по видео (для повторного входа в полноэкранный режим)
-        elements.scaryVideo.addEventListener('click', () => {
-            const elem = document.documentElement;
-            if (!document.fullscreenElement) {
-                if (elem.requestFullscreen) elem.requestFullscreen();
-            }
-        });
-        
-        // Запуск при загрузке страницы
+
+        // Возврат курсора после скримера (если нужно)
+        function endScare() {
+            elements.body.classList.remove('scare-mode');
+        }
+
         window.addEventListener('DOMContentLoaded', init);
     </script>
 </body>
