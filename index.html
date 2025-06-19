@@ -13,17 +13,11 @@
             font-family: 'Noto Sans JP', sans-serif;
             background: #000;
             color: #fff;
-            cursor: url('cursor.png') 16 16, auto; /* Курсор 32x32 с центром в 16x16 */
+            cursor: url('cursor.png'), auto; /* Кастомный курсор */
             user-select: none;
-            -webkit-user-select: none;
         }
 
-        /* Скрытие курсора на скримере */
-        .scare-mode {
-            cursor: none !important;
-        }
-
-        /* Стили для видео и кнопки */
+        /* Видео-фон */
         #background-video {
             position: fixed;
             right: 0;
@@ -36,6 +30,7 @@
             transition: opacity 1s ease-in;
         }
 
+        /* Кнопка Continue */
         #continue-btn {
             position: fixed;
             top: 50%;
@@ -48,29 +43,35 @@
             color: #000;
             border: none;
             border-radius: 5px;
-            cursor: url('cursor.png') 16 16, pointer; /* Курсор для кнопки */
-            transition: all 0.3s ease;
+            cursor: url('cursor.png'), pointer; /* Курсор для кнопки */
             z-index: 2000;
             box-shadow: 0 4px 15px rgba(200, 160, 100, 0.5);
             text-transform: uppercase;
-            letter-spacing: 2px;
         }
 
-        #continue-btn:hover {
-            transform: translate(-50%, -50%) scale(1.05);
-            box-shadow: 0 6px 20px rgba(200, 160, 100, 0.7);
+        /* Скример (изначально скрыт) */
+        #scary-video {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: none;
+            z-index: 1000;
         }
     </style>
 </head>
 <body>
+    <!-- Основной видеобэкграунд -->
     <video id="background-video" autoplay muted loop playsinline>
         <source src="gameplay.mp4" type="video/mp4">
     </video>
-    
-    <video id="scary-video" preload="auto">
+
+    <!-- Скример -->
+    <video id="scary-video">
         <source src="scary.mp4" type="video/mp4">
     </video>
-    
+
+    <!-- Кнопка Continue -->
     <button id="continue-btn">Continue</button>
 
     <script>
@@ -78,39 +79,46 @@
         const elements = {
             bgVideo: document.getElementById("background-video"),
             scaryVideo: document.getElementById("scary-video"),
-            continueBtn: document.getElementById("continue-btn"),
-            body: document.body
+            continueBtn: document.getElementById("continue-btn")
         };
 
-        // Инициализация
-        function init() {
-            elements.continueBtn.addEventListener('click', startExperience);
-        }
-
-        // Запуск опыта
-        function startExperience() {
-            elements.continueBtn.style.opacity = '0';
+        // Обработчик кнопки Continue
+        elements.continueBtn.addEventListener('click', () => {
+            // Плавное появление фона
+            elements.bgVideo.style.opacity = '1';
+            
+            // Запуск скримера через 5 секунд (имитация прогресс-бара)
             setTimeout(() => {
-                elements.continueBtn.style.display = 'none';
-                elements.bgVideo.style.opacity = '1';
-            }, 500);
-        }
+                startScare();
+            }, 5000);
+        });
 
-        // Включение скримера (курсор скрывается)
+        // Запуск скримера на полный экран (как в вашем примере)
         function startScare() {
-            elements.body.classList.add('scare-mode');
             elements.scaryVideo.style.display = 'block';
             elements.scaryVideo.play()
-                .then(() => document.documentElement.requestFullscreen())
-                .catch(e => console.error("Ошибка видео:", e));
+                .then(() => {
+                    // Вход в полноэкранный режим
+                    if (document.documentElement.requestFullscreen) {
+                        document.documentElement.requestFullscreen();
+                    } else if (document.documentElement.webkitRequestFullscreen) {
+                        document.documentElement.webkitRequestFullscreen();
+                    }
+                })
+                .catch(e => {
+                    console.error("Ошибка видео:", e);
+                    // Если не получилось, пробуем без звука
+                    elements.scaryVideo.muted = true;
+                    elements.scaryVideo.play();
+                });
         }
 
-        // Возврат курсора после скримера (если нужно)
-        function endScare() {
-            elements.body.classList.remove('scare-mode');
-        }
-
-        window.addEventListener('DOMContentLoaded', init);
+        // Клик по скримеру для повторного полноэкранного режима
+        elements.scaryVideo.addEventListener('click', () => {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+            }
+        });
     </script>
 </body>
 </html>
