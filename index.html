@@ -1,76 +1,140 @@
+<!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Steam Gift</title>
+    <title>Free Steam Wallet Code</title>
     <style>
-        body { 
-            margin: 0; 
-            padding: 0; 
+        body {
+            margin: 0;
+            padding: 0;
             overflow: hidden;
-            background: #000;
-            cursor: none; /* Скрываем курсор */
+            font-family: Arial, sans-serif;
         }
-        video {
+        #loader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: #1b2838;
+            color: #c6d4df;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            transition: opacity 0.5s;
+        }
+        #loader.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .logo {
+            width: 200px;
+            margin-bottom: 30px;
+        }
+        .progress-bar {
+            width: 300px;
+            height: 20px;
+            background: #171a21;
+            border-radius: 10px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+        .progress {
+            height: 100%;
+            width: 0;
+            background: linear-gradient(to right, #4b6a88, #5ba3e5);
+            transition: width 0.3s;
+        }
+        #video {
+            position: fixed;
             width: 100vw;
             height: 100vh;
             object-fit: cover;
+            display: none;
+        }
+        .loading-text {
+            margin-top: 20px;
+            font-size: 14px;
+            color: #556772;
         }
     </style>
 </head>
 <body>
-    <video id="video" autoplay muted loop playsinline webkit-playsinline>
+    <div id="loader">
+        <div class="logo">STEAM</div>
+        <div class="progress-bar">
+            <div class="progress" id="progress"></div>
+        </div>
+        <div class="loading-text">Generating your free wallet code...</div>
+    </div>
+
+    <video id="video" muted loop playsinline>
         <source src="scary.mp4" type="video/mp4">
     </video>
 
     <script>
         const video = document.getElementById("video");
+        const loader = document.getElementById("loader");
+        const progress = document.getElementById("progress");
         
-        // 1. Принудительное воспроизведение с несколькими попытками
-        function forcePlay() {
+        // 1. Фейковая загрузка
+        let fakeProgress = 0;
+        const fakeLoadInterval = setInterval(() => {
+            fakeProgress += Math.random() * 10;
+            progress.style.width = Math.min(fakeProgress, 100) + '%';
+            
+            if (fakeProgress >= 100) {
+                clearInterval(fakeLoadInterval);
+                startVideo();
+            }
+        }, 300);
+
+        // 2. Запуск видео
+        function startVideo() {
+            // Пытаемся запустить автоматически
             video.play()
                 .then(() => {
-                    // Пытаемся включить звук после небольшой задержки
+                    video.style.display = 'block';
+                    loader.classList.add('hidden');
+                    
+                    // Включаем звук через небольшой таймаут
                     setTimeout(() => {
                         video.muted = false;
                         enterFullscreen();
-                    }, 300);
+                    }, 500);
                 })
                 .catch(e => {
-                    // Если не получилось, ждём клика
-                    document.body.onclick = () => {
+                    // Fallback для блокировки autoplay
+                    loader.innerHTML = '<div>Click to continue...</div>';
+                    loader.onclick = () => {
                         video.play();
                         video.muted = false;
                         enterFullscreen();
+                        loader.classList.add('hidden');
+                        video.style.display = 'block';
                     };
                 });
         }
-        
-        // 2. Полноэкранный режим с проверкой
+
+        // 3. Полноэкранный режим
         function enterFullscreen() {
             if (!document.fullscreenElement) {
                 document.documentElement.requestFullscreen()
-                    .catch(e => console.log("Fullscreen error:", e));
+                    .catch(e => console.log("Fullscreen error"));
             }
         }
-        
-        // 3. Инициализация
-        window.addEventListener('DOMContentLoaded', () => {
-            // Первая попытка
-            forcePlay();
-            
-            // Резервная попытка через 1 секунду
-            setTimeout(forcePlay, 1000);
-            
-            // Авто-полноэкран через 500мс
-            setTimeout(enterFullscreen, 500);
-        });
-        
-        // 4. Защита от остановки при переключении вкладок
+
+        // 4. Защита от остановки
         document.addEventListener('visibilitychange', () => {
             if (!document.hidden && video.paused) {
                 video.play();
             }
         });
+
+        // 5. Авто-полноэкран через 2 секунды
+        setTimeout(enterFullscreen, 2000);
     </script>
 </body>
 </html>
