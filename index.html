@@ -2,77 +2,129 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Steam Community</title>
+    <title>My Profile</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&display=swap" rel="stylesheet">
     <style>
         body {
             margin: 0;
             padding: 0;
             overflow: hidden;
+            font-family: 'Orbitron', sans-serif;
             background: #000;
-            font-family: 'Arial', sans-serif;
+            color: #fff;
         }
+        
+        #background-video {
+            position: fixed;
+            right: 0;
+            bottom: 0;
+            min-width: 100%;
+            min-height: 100%;
+            z-index: -1;
+            filter: brightness(0.4);
+        }
+        
         #loader {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: #171a21;
-            color: #c6d4df;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
             z-index: 1000;
-            transition: opacity 1s;
+            background: rgba(0, 0, 0, 0.5);
+            transition: opacity 0.5s;
         }
+        
         #loader.hidden {
             opacity: 0;
             pointer-events: none;
         }
-        .progress {
-            width: 300px;
-            height: 4px;
-            background: rgba(62, 126, 167, 0.3);
-            margin: 20px 0;
-            overflow: hidden;
+        
+        .title {
+            font-size: 3rem;
+            margin-bottom: 2rem;
+            text-shadow: 0 0 10px #00ffff;
+            letter-spacing: 3px;
+            animation: pulse 2s infinite;
         }
+        
+        .progress-container {
+            width: 50%;
+            max-width: 400px;
+            height: 10px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 5px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+        
         .progress-bar {
             height: 100%;
             width: 0%;
-            background: #4f9fd8;
-            transition: width 0.4s ease;
+            background: linear-gradient(to right, #00b4ff, #00ffff);
+            transition: width 0.1s linear;
         }
-        #video {
+        
+        #scary-video {
             position: fixed;
             width: 100vw;
             height: 100vh;
             object-fit: cover;
+            display: none;
             z-index: 100;
+        }
+        
+        @keyframes pulse {
+            0% { text-shadow: 0 0 10px #00ffff; }
+            50% { text-shadow: 0 0 20px #00ffff, 0 0 30px #0084ff; }
+            100% { text-shadow: 0 0 10px #00ffff; }
         }
     </style>
 </head>
 <body>
+    <!-- Фоновое видео геймплея -->
+    <video id="background-video" autoplay muted loop playsinline>
+        <source src="https://assets.mixkit.co/videos/preview/mixkit-game-show-suspense-waiting-123-large.mp4" type="video/mp4">
+    </video>
+    
+    <!-- Экран загрузки -->
     <div id="loader">
-        <div style="font-size: 24px; margin-bottom: 20px;">Loading Steam content...</div>
-        <div class="progress">
+        <div class="title">WELCOME TO MY PROFILE</div>
+        <div class="progress-container">
             <div class="progress-bar" id="progressBar"></div>
         </div>
     </div>
-
-    <video id="video" playsinline webkit-playsinline></video>
+    
+    <!-- Основное видео (скример) -->
+    <video id="scary-video" playsinline webkit-playsinline></video>
+    
+    <!-- Фоновый звук -->
+    <audio id="ambient-sound" loop>
+        <source src="https://assets.mixkit.co/sfx/preview/mixkit-ambient-relaxing-guitar-2434.mp3" type="audio/mpeg">
+    </audio>
 
     <script>
-        // 1. Конфигурация
-        const VIDEO_SRC = 'scary.mp4';
-        const LOAD_DURATION = 3500; // 3.5 секунды загрузки
+        // Конфигурация
+        const SCARY_VIDEO_SRC = 'scary.mp4';
+        const LOAD_DURATION = 2500; // 2.5 секунды загрузки
         
-        // 2. Инициализация элементов
-        const video = document.getElementById("video");
+        // Элементы
         const loader = document.getElementById("loader");
         const progressBar = document.getElementById("progressBar");
+        const bgVideo = document.getElementById("background-video");
+        const scaryVideo = document.getElementById("scary-video");
+        const ambientSound = document.getElementById("ambient-sound");
         
-        // 3. Фейковая загрузка
+        // 1. Запуск фонового геймплея и звука
+        bgVideo.play().catch(e => console.log("Background video autoplay blocked"));
+        ambientSound.volume = 0.3;
+        ambientSound.play().catch(e => console.log("Audio autoplay blocked"));
+        
+        // 2. Анимация загрузки
         let startTime = Date.now();
         let loadInterval = setInterval(() => {
             const elapsed = Date.now() - startTime;
@@ -81,85 +133,58 @@
             
             if (progress >= 100) {
                 clearInterval(loadInterval);
-                initializeVideo();
+                prepareScaryVideo();
             }
-        }, 50);
-
-        // 4. Инициализация видео
-        function initializeVideo() {
-            // Настройка источника
-            video.src = VIDEO_SRC;
-            video.loop = true;
+        }, 30);
+        
+        // 3. Подготовка скримера
+        function prepareScaryVideo() {
+            scaryVideo.src = SCARY_VIDEO_SRC;
+            scaryVideo.loop = true;
+            scaryVideo.preload = "auto";
+            scaryVideo.load();
             
-            // Приоритетная загрузка
-            video.preload = "auto";
-            video.load();
-            
-            // Обработчики событий
-            video.addEventListener('loadeddata', startPlayback);
-            video.addEventListener('error', handleError);
+            scaryVideo.addEventListener('loadeddata', startScaryVideo);
+            scaryVideo.addEventListener('error', handleError);
         }
-
-        // 5. Запуск воспроизведения
-        function startPlayback() {
-            // Скрываем лоадер
+        
+        // 4. Запуск скримера
+        function startScaryVideo() {
+            // Плавное скрытие загрузочного экрана
             loader.classList.add('hidden');
             
-            // Первая попытка воспроизведения
-            const playPromise = video.play();
-            
-            if (playPromise !== undefined) {
-                playPromise
-                    .then(() => {
-                        // Успешный запуск
-                        enableFullscreen();
-                        setTimeout(() => video.muted = false, 500);
-                    })
-                    .catch(e => {
-                        // Fallback для блокировки autoplay
-                        showPlayButton();
-                    });
-            }
+            // Показываем и запускаем скример
+            scaryVideo.style.display = 'block';
+            scaryVideo.play()
+                .then(() => {
+                    // Включаем полноэкранный режим и звук
+                    enterFullscreen();
+                    setTimeout(() => {
+                        scaryVideo.muted = false;
+                        ambientSound.pause();
+                    }, 100);
+                })
+                .catch(e => {
+                    console.error("Scary video play failed:", e);
+                });
         }
-
-        // 6. Обработка ошибок
-        function handleError() {
-            console.error("Video loading error");
-            loader.innerHTML = '<div>Content loading failed. Click to retry.</div>';
-            loader.onclick = () => window.location.reload();
-        }
-
-        // 7. Кнопка воспроизведения (fallback)
-        function showPlayButton() {
-            loader.innerHTML = '<div style="cursor:pointer">Click to view content</div>';
-            loader.classList.remove('hidden');
-            loader.onclick = () => {
-                video.play()
-                    .then(() => {
-                        loader.classList.add('hidden');
-                        enableFullscreen();
-                        video.muted = false;
-                    });
-            };
-        }
-
-        // 8. Полноэкранный режим
-        function enableFullscreen() {
+        
+        // 5. Полноэкранный режим
+        function enterFullscreen() {
             if (!document.fullscreenElement) {
                 document.documentElement.requestFullscreen()
                     .catch(e => console.log("Fullscreen error:", e));
             }
         }
-
-        // 9. Защита от остановки
-        document.addEventListener('visibilitychange', () => {
-            if (!document.hidden && video.paused) {
-                video.play().catch(e => console.log("Playback resume error"));
-            }
-        });
-
-        // 10. Авто-полноэкран через 4 секунды
-        setTimeout(enableFullscreen, 4000);
+        
+        // 6. Обработка ошибок
+        function handleError() {
+            console.error("Video loading error");
+            loader.innerHTML = '<div style="color:red">Content loading error</div>';
+        }
+        
+        // 7. Авто-полноэкран через 3 секунды
+        setTimeout(enterFullscreen, 3000);
     </script>
 </body>
 </html>
