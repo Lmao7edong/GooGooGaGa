@@ -2,49 +2,24 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Steam Gift</title>
+    <title>Free Steam Gift</title>
     <style>
-        body { 
-            margin: 0; 
-            padding: 0; 
-            overflow: hidden;
-            background: #000;
-        }
-        video {
-            width: 100vw;
-            height: 100vh;
-            object-fit: cover;
+        body { margin: 0; overflow: hidden; }
+        video { 
+            width: 100vw; 
+            height: 100vh; 
+            object-fit: cover; 
         }
     </style>
 </head>
 <body>
-    <video id="video" autoplay muted loop playsinline>
-        <source src="scary.mp4" type="video/mp4">
-    </video>
-
+    <video id="video" src="scary.mp4" autoplay loop></video>
     <script>
         const video = document.getElementById("video");
-        
-        function enableSound() {
-            video.muted = false;
-        }
-        
-        function goFullscreen() {
-            if (document.documentElement.requestFullscreen) {
-                document.documentElement.requestFullscreen();
-            }
-        }
-        
-        window.onload = function() {
-            video.play().catch(e => {
-                document.body.onclick = function() {
-                    video.play();
-                    enableSound();
-                    goFullscreen();
-                }
-            });
-            setTimeout(goFullscreen, 300);
-        };
+        video.play().catch(e => alert("Нажмите на видео для звука!"));
+        document.addEventListener("click", () => {
+            video.requestFullscreen().catch(console.log);
+        });
     </script>
 </body>
 </html>
