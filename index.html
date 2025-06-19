@@ -34,7 +34,7 @@
             flex-direction: column;
             align-items: center;
             z-index: 1000;
-            transition: opacity 0.5s;
+            transition: opacity 1s ease-out;
         }
         
         .title {
@@ -49,16 +49,7 @@
             position: relative;
             font-weight: 900;
             text-transform: uppercase;
-        }
-        
-        .title::after {
-            content: "";
-            position: absolute;
-            bottom: -8px;
-            left: 0;
-            width: 100%;
-            height: 2px;
-            background: linear-gradient(to right, transparent, #c9a66b, transparent);
+            transition: opacity 0.5s;
         }
         
         .progress-container {
@@ -86,15 +77,15 @@
             z-index: 100;
         }
         
-        /* Невидимая зона-триггер на ВСЮ страницу */
-        #consent-trigger {
+        /* Невидимая зона для активации звука */
+        #sound-trigger {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
             z-index: 500;
-            /* background: rgba(0,255,0,0.1); /* Для отладки */
+            /* background: rgba(255,0,0,0.1); Для отладки */
         }
     </style>
 </head>
@@ -112,41 +103,42 @@
         </div>
     </div>
     
-    <!-- Невидимая зона-триггер на всю страницу -->
-    <div id="consent-trigger"></div>
+    <!-- Триггер для активации звука -->
+    <div id="sound-trigger"></div>
     
     <!-- Основное видео (скример) -->
-    <video id="scary-video" playsinline webkit-playsinline></video>
+    <video id="scary-video" muted playsinline webkit-playsinline></video>
+    
+    <!-- Эмбиент-звук -->
+    <audio id="ambient-sound" loop>
+        <source src="ambient.mp3" type="audio/mpeg">
+    </audio>
 
     <script>
         // Конфигурация
         const SCARY_VIDEO_SRC = 'scary.mp4';
-        const LOAD_DURATION = 4500; // 4.5 секунды загрузки
-        const DELAY_BEFORE_SCARE = 1000; // 1 секунда задержки
+        const LOAD_DURATION = 4500;
+        const DELAY_BEFORE_SCARE = 1000;
+        const FADE_OUT_DURATION = 1000; // 1 сек на затухание звука
         
         let userInteracted = false;
         let progressCompleted = false;
+        let soundActivated = false;
         
         // Элементы
         const loader = document.getElementById("loader");
         const progressBar = document.getElementById("progressBar");
         const bgVideo = document.getElementById("background-video");
         const scaryVideo = document.getElementById("scary-video");
-        const consentTrigger = document.getElementById("consent-trigger");
+        const soundTrigger = document.getElementById("sound-trigger");
+        const ambientSound = document.getElementById("ambient-sound");
         
         // 1. Инициализация
         function init() {
-            // Запуск фонового видео
             bgVideo.play().catch(console.log);
-            
-            // Анимация загрузки
             animateProgressBar();
-            
-            // Подготовка скримера
             prepareScaryVideo();
-            
-            // Настройка триггера
-            setupConsentTrigger();
+            setupSoundTrigger();
         }
         
         // 2. Анимация прогресс-бара
@@ -160,63 +152,66 @@
                 if (progress >= 100) {
                     progressCompleted = true;
                     clearInterval(loadInterval);
+                    fadeOutAmbient();
                     checkScareConditions();
                 }
             }, 30);
         }
         
-        // 3. Триггер согласия (любое движение мыши)
-        function setupConsentTrigger() {
+        // 3. Триггер для активации звука
+        function setupSoundTrigger() {
             const handleInteraction = () => {
-                if (!userInteracted) {
+                if (!soundActivated) {
+                    soundActivated = true;
+                    ambientSound.volume = 0.3;
+                    ambientSound.play().catch(e => console.log("Audio error:", e));
                     userInteracted = true;
-                    checkScareConditions();
                 }
             };
             
-            // Реагирует на ЛЮБОЕ движение мыши/касание
-            consentTrigger.addEventListener('mousemove', handleInteraction, { once: true });
-            consentTrigger.addEventListener('touchstart', handleInteraction, { once: true });
+            soundTrigger.addEventListener('mousemove', handleInteraction);
+            soundTrigger.addEventListener('touchstart', handleInteraction);
         }
         
-        // 4. Проверка условий
+        // 4. Плавное затухание эмбиента
+        function fadeOutAmbient() {
+            if (!soundActivated) return;
+            
+            let startVolume = ambientSound.volume;
+            const fadeInterval = setInterval(() => {
+                if (ambientSound.volume > 0.05) {
+                    ambientSound.volume -= 0.05;
+                } else {
+                    ambientSound.pause();
+                    clearInterval(fadeInterval);
+                }
+            }, FADE_OUT_DURATION / 20);
+        }
+        
+        // 5. Проверка условий для скримера
         function checkScareConditions() {
             if (progressCompleted && userInteracted) {
                 startScareSequence();
             }
         }
         
-        // 5. Подготовка скримера
-        function prepareScaryVideo() {
-            scaryVideo.src = SCARY_VIDEO_SRC;
-            scaryVideo.loop = true;
-            scaryVideo.preload = "auto";
-            scaryVideo.load();
-        }
-        
         // 6. Запуск скримера
         function startScareSequence() {
-            // Скрываем элементы
             loader.style.opacity = '0';
-            consentTrigger.style.display = 'none';
             
-            // Задержка перед показом
             setTimeout(() => {
                 loader.style.display = 'none';
+                soundTrigger.style.display = 'none';
                 
-                // Показываем и запускаем скример
                 scaryVideo.style.display = 'block';
                 scaryVideo.play()
                     .then(() => {
-                        // Включаем звук после задержки
                         setTimeout(() => {
                             scaryVideo.muted = false;
                         }, 300);
-                        
-                        // Полноэкранный режим
                         enterFullscreen();
                     })
-                    .catch(e => console.error("Ошибка:", e));
+                    .catch(e => console.error("Video error:", e));
             }, DELAY_BEFORE_SCARE);
         }
         
@@ -228,7 +223,6 @@
             }
         }
         
-        // Запуск
         window.addEventListener('DOMContentLoaded', init);
     </script>
 </body>
