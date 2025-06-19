@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>LmaoZedong</title>
+    <title>Steam Gift</title>
     <style>
         body { 
             margin: 0; 
@@ -25,30 +25,24 @@
     <script>
         const video = document.getElementById("video");
         
-        // Пытаемся включить звук после клика (если autoplay не сработал)
         function enableSound() {
             video.muted = false;
         }
         
-        // Авто-полноэкранный режим
         function goFullscreen() {
             if (document.documentElement.requestFullscreen) {
                 document.documentElement.requestFullscreen();
             }
         }
         
-        // Запускаем всё при загрузке
         window.onload = function() {
             video.play().catch(e => {
-                // Если autoplay заблокирован, ждём клика
                 document.body.onclick = function() {
                     video.play();
                     enableSound();
                     goFullscreen();
                 }
             });
-            
-            // Пытаемся сразу включить полноэкран
             setTimeout(goFullscreen, 300);
         };
     </script>
