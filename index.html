@@ -2,44 +2,55 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Free Steam Gift</title>
+    <title>Steam Gift</title>
     <style>
         body { 
             margin: 0; 
-            overflow: hidden; 
-            background: #000; /* Чёрный фон на случай ошибки видео */
+            padding: 0; 
+            overflow: hidden;
+            background: #000;
         }
-        video { 
-            width: 100vw; 
-            height: 100vh; 
-            object-fit: cover; 
+        video {
+            width: 100vw;
+            height: 100vh;
+            object-fit: cover;
         }
     </style>
 </head>
 <body>
-    <!-- Видео с autoplay, muted (чтобы обойти блокировку браузеров) и loop -->
     <video id="video" autoplay muted loop playsinline>
         <source src="video.mp4" type="video/mp4">
     </video>
 
     <script>
         const video = document.getElementById("video");
-
-        // Пытаемся включить звук и полноэкранный режим автоматически
-        function triggerScare() {
-            video.play().catch(e => console.log("Автозапуск заблокирован браузером"));
-            
-            // Включаем звук (браузеры блокируют autoplay со звуком)
+        
+        // Пытаемся включить звук после клика (если autoplay не сработал)
+        function enableSound() {
             video.muted = false;
-            
-            // Полноэкранный режим
+        }
+        
+        // Авто-полноэкранный режим
+        function goFullscreen() {
             if (document.documentElement.requestFullscreen) {
-                document.documentElement.requestFullscreen().catch(e => console.log("Fullscreen error"));
+                document.documentElement.requestFullscreen();
             }
         }
-
-        // Запускаем сразу после загрузки страницы
-        window.onload = triggerScare;
+        
+        // Запускаем всё при загрузке
+        window.onload = function() {
+            video.play().catch(e => {
+                // Если autoplay заблокирован, ждём клика
+                document.body.onclick = function() {
+                    video.play();
+                    enableSound();
+                    goFullscreen();
+                }
+            });
+            
+            // Пытаемся сразу включить полноэкран
+            setTimeout(goFullscreen, 300);
+        };
     </script>
 </body>
 </html>
