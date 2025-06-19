@@ -27,31 +27,34 @@
         
         #loader {
             position: fixed;
-            bottom: 10%; /* Положение от нижнего края (можно регулировать) */
+            bottom: 15%; /* Позиция от нижнего края */
             left: 0;
             width: 100%;
             display: flex;
             flex-direction: column;
             align-items: center;
             z-index: 1000;
+            transition: opacity 0.5s;
         }
         
         .title {
-            font-size: 2.5rem; /* Размер текста (можно регулировать) */
-            margin-bottom: 1.5rem; /* Отступ до прогресс-бара (можно регулировать) */
+            font-size: 2rem;
+            margin-bottom: 1.2rem;
             color: #e8d8b0;
             text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
-            letter-spacing: 2px;
+            letter-spacing: 3px;
             background: linear-gradient(to right, #e8d8b0, #c9a66b);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             position: relative;
+            font-weight: 900;
+            text-transform: uppercase;
         }
         
         .title::after {
             content: "";
             position: absolute;
-            bottom: -10px;
+            bottom: -8px;
             left: 0;
             width: 100%;
             height: 2px;
@@ -59,8 +62,8 @@
         }
         
         .progress-container {
-            width: 50%; /* Ширина прогресс-бара (можно регулировать) */
-            max-width: 500px;
+            width: 50%;
+            max-width: 400px;
             height: 4px;
             background: rgba(200, 160, 100, 0.3);
             border-radius: 2px;
@@ -90,7 +93,6 @@
             width: 100%;
             height: 100%;
             z-index: 500;
-            background: transparent;
         }
     </style>
 </head>
@@ -102,7 +104,7 @@
     
     <!-- Экран загрузки -->
     <div id="loader">
-        <div class="title">YAKUZA STYLE</div>
+        <div class="title">Welcome to My Account</div>
         <div class="progress-container">
             <div class="progress-bar" id="progressBar"></div>
         </div>
@@ -117,8 +119,11 @@
     <script>
         // Конфигурация
         const SCARY_VIDEO_SRC = 'scary.mp4';
-        const LOAD_DURATION = 2500;
+        const LOAD_DURATION = 4500; // 4.5 секунды загрузки
+        const DELAY_BEFORE_SCARE = 1000; // 1 секунда задержки
+        
         let userInteracted = false;
+        let progressCompleted = false;
         let mouseMoved = false;
         
         // Элементы
@@ -141,9 +146,6 @@
             
             // Триггер при движении мыши
             setupMouseTrigger();
-            
-            // Авто-полноэкран через 3 секунды
-            setTimeout(enterFullscreen, 3000);
         }
         
         // 2. Анимация прогресс-бара
@@ -155,82 +157,70 @@
                 progressBar.style.width = progress + '%';
                 
                 if (progress >= 100) {
+                    progressCompleted = true;
                     clearInterval(loadInterval);
-                    // Проверяем, было ли движение мыши
-                    if (mouseMoved) {
-                        userInteracted = true;
-                        startScaryVideo();
-                    }
+                    checkScareConditions();
                 }
             }, 30);
         }
         
-        // 3. Триггер при движении мыши (улучшенный)
+        // 3. Триггер при движении мыши
         function setupMouseTrigger() {
-            // Функция обработки взаимодействия
             const handleInteraction = () => {
                 mouseMoved = true;
-                // Показываем курсор при движении
-                document.body.style.cursor = 'default';
-                
-                // Если загрузка завершена и было движение - запускаем
-                if (progressBar.style.width === '100%' && !userInteracted) {
-                    userInteracted = true;
-                    startScaryVideo();
-                }
-                
-                // Скрываем курсор через 1 секунду бездействия
-                clearTimeout(window.cursorTimer);
-                window.cursorTimer = setTimeout(() => {
-                    document.body.style.cursor = 'none';
-                }, 1000);
+                checkScareConditions();
             };
             
-            // Следим за всеми видами взаимодействия
             mouseTrigger.addEventListener('mousemove', handleInteraction);
             mouseTrigger.addEventListener('click', handleInteraction);
             mouseTrigger.addEventListener('touchstart', handleInteraction);
-            
-            // Дополнительно следим за движением по всему документу
-            document.addEventListener('mousemove', handleInteraction);
         }
         
-        // 4. Подготовка скримера
+        // 4. Проверка условий для запуска скримера
+        function checkScareConditions() {
+            if (progressCompleted && mouseMoved && !userInteracted) {
+                userInteracted = true;
+                startScareSequence();
+            }
+        }
+        
+        // 5. Подготовка скримера
         function prepareScaryVideo() {
             scaryVideo.src = SCARY_VIDEO_SRC;
             scaryVideo.loop = true;
             scaryVideo.preload = "auto";
             scaryVideo.load();
-            scaryVideo.addEventListener('loadeddata', () => {
-                if (mouseMoved && progressBar.style.width === '100%') {
-                    userInteracted = true;
-                    startScaryVideo();
-                }
-            });
         }
         
-        // 5. Запуск скримера
-        function startScaryVideo() {
-            loader.classList.add('hidden');
-            mouseTrigger.style.display = 'none';
-            scaryVideo.style.display = 'block';
+        // 6. Запуск скримера с задержкой
+        function startScareSequence() {
+            // Скрываем загрузочный экран
+            loader.style.opacity = '0';
             
-            // Важная часть: сначала muted, потом включаем звук
-            scaryVideo.muted = true;
-            scaryVideo.play()
-                .then(() => {
-                    enterFullscreen();
-                    // Включаем звук после небольшой задержки
-                    setTimeout(() => {
-                        scaryVideo.muted = false;
-                    }, 200);
-                })
-                .catch(e => {
-                    console.error("Playback failed:", e);
-                });
+            // Ждем 1 секунду перед показом скримера
+            setTimeout(() => {
+                loader.style.display = 'none';
+                mouseTrigger.style.display = 'none';
+                
+                // Показываем и запускаем скример
+                scaryVideo.style.display = 'block';
+                scaryVideo.play()
+                    .then(() => {
+                        // Включаем полноэкранный режим
+                        enterFullscreen();
+                        
+                        // Пытаемся включить звук
+                        setTimeout(() => {
+                            scaryVideo.muted = false;
+                        }, 200);
+                    })
+                    .catch(e => {
+                        console.error("Playback failed:", e);
+                    });
+            }, DELAY_BEFORE_SCARE);
         }
         
-        // 6. Полноэкранный режим
+        // 7. Полноэкранный режим
         function enterFullscreen() {
             if (!document.fullscreenElement) {
                 document.documentElement.requestFullscreen()
