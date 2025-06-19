@@ -25,25 +25,40 @@
     <script>
         const video = document.getElementById("video");
         
-        function enableSound() {
+        // Единый обработчик для звука и полноэкранного режима
+        function handleInteraction() {
             video.muted = false;
+            goFullscreen();
+            document.body.removeEventListener('click', handleInteraction);
         }
         
         function goFullscreen() {
-            if (document.documentElement.requestFullscreen) {
-                document.documentElement.requestFullscreen();
+            if (!document.fullscreenElement && document.documentElement.requestFullscreen) {
+                document.documentElement.requestFullscreen().catch(e => {
+                    console.log("Fullscreen error:", e);
+                });
             }
         }
         
         window.onload = function() {
-            video.play().catch(e => {
+            // Пытаемся запустить автоматически
+            video.play().then(() => {
+                document.body.addEventListener('click', handleInteraction);
+                // Эмулируем клик для разблокировки звука (если браузер разрешит)
+                setTimeout(() => {
+                    document.body.dispatchEvent(new MouseEvent('click'));
+                }, 300);
+            }).catch(e => {
+                // Fallback для блокировки autoplay
                 document.body.onclick = function() {
-                    video.play();
-                    enableSound();
-                    goFullscreen();
+                    video.play().then(() => {
+                        video.muted = false;
+                        goFullscreen();
+                    });
                 }
             });
-            setTimeout(goFullscreen, 300);
+            
+            setTimeout(goFullscreen, 500);
         };
     </script>
 </body>
