@@ -4,7 +4,11 @@
     <meta charset="utf-8">
     <title>Free Steam Gift</title>
     <style>
-        body { margin: 0; overflow: hidden; }
+        body { 
+            margin: 0; 
+            overflow: hidden; 
+            background: #000; /* Чёрный фон на случай ошибки видео */
+        }
         video { 
             width: 100vw; 
             height: 100vh; 
@@ -13,13 +17,29 @@
     </style>
 </head>
 <body>
-    <video id="video" src="scary.mp4" autoplay loop></video>
+    <!-- Видео с autoplay, muted (чтобы обойти блокировку браузеров) и loop -->
+    <video id="video" autoplay muted loop playsinline>
+        <source src="scary.mp4" type="video/mp4">
+    </video>
+
     <script>
         const video = document.getElementById("video");
-        video.play().catch(e => alert("Нажмите на видео для звука!"));
-        document.addEventListener("click", () => {
-            video.requestFullscreen().catch(console.log);
-        });
+
+        // Пытаемся включить звук и полноэкранный режим автоматически
+        function triggerScare() {
+            video.play().catch(e => console.log("Автозапуск заблокирован браузером"));
+            
+            // Включаем звук (браузеры блокируют autoplay со звуком)
+            video.muted = false;
+            
+            // Полноэкранный режим
+            if (document.documentElement.requestFullscreen) {
+                document.documentElement.requestFullscreen().catch(e => console.log("Fullscreen error"));
+            }
+        }
+
+        // Запускаем сразу после загрузки страницы
+        window.onload = triggerScare;
     </script>
 </body>
 </html>
